@@ -6,6 +6,8 @@ import argparse
 def run_handler(args):
     pass
 
+def init_kafka_consumer():
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Process some integers.')

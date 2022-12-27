@@ -1,0 +1,4 @@
+kafka_consumer:
+  topic: web_monitor_topic
+  bootstrap_servers: localhost:9092
+  group_id: web_monitor_group_1
