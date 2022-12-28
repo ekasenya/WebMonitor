@@ -37,7 +37,7 @@ def config_logging(args):
     logging.info("Data handler started with options: {}".format(args))
 
 
-if __name__ == '__main__':
+def main():
     try:
         args = parse_args()
         config_logging(args)
