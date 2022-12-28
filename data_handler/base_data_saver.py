@@ -3,7 +3,7 @@ class BaseDataSaver:
     def get_type():
         raise NotImplementedError()
 
-    def init(self, config):
+    def init(self):
         raise NotImplementedError()
 
     def finalize(self):
