@@ -4,8 +4,9 @@ from data_saver_constants import DataSaverTypes
 from base_data_saver import BaseDataSaver
 
 import psycopg2
+from retry import retry
 
-logger = logging.getLogger('posgre_sql_data_saver')
+logger = logging.getLogger('postgre_sql_data_saver')
 
 
 WEBSITE_READ_SQL = '''
@@ -35,17 +36,27 @@ class PostgreSqlDataSaver(BaseDataSaver):
     def get_type():
         return DataSaverTypes.POSTGRE_SQL.value
 
-    def __init__(self):
+    def __init__(self, config):
         self.db_conn = None
+        self.config = config['postgre_sql']
 
-    def init(self, config):
-        self.db_conn = psycopg2.connect(dbname=config['postgre_sql']['dbname'], user=config['postgre_sql']['user'],
-                                        password=config['postgre_sql']['password'], host=config['postgre_sql']['host'],
-                                        port=config['postgre_sql']['port'])
+    def init(self):
+        self._connect_db()
 
     def finalize(self):
-        if self.db_conn:
+        if self.db_conn and not self.db_conn.closed:
             self.db_conn.close()
+
+    def _connect_db(self):
+        @retry(tries=self.config['reconnect_attempts'], delay=self.config['reconnect_delay'],
+               backoff=self.config['reconnect_backoff'])
+        def _connect_db_with_retry(self):
+            self.db_conn = psycopg2.connect(dbname=self.config['dbname'], user=self.config['user'],
+                                            password=self.config['password'], host=self.config['host'],
+                                            port=self.config['port'])
+            logger.info('Connected to db: {host}:{port}'.format(host=self.config['host'], port=self.config['port']))
+
+        _connect_db_with_retry(self)
 
     def _get_website_id(self, cursor, url):
         cursor.execute(WEBSITE_READ_SQL, {'url': url})
@@ -57,15 +68,25 @@ class PostgreSqlDataSaver(BaseDataSaver):
         return record[0]
 
     def save_data_item(self, data):
-        cursor = self.db_conn.cursor()
-        website_id = self._get_website_id(cursor, data['url'])
-        cursor.execute(WEB_MONITORING_INSERT_SQL, {'website_id': website_id,
-                                                   'available': data['available'],
-                                                   'request_ts': data['request_ts'],
-                                                   'response_time': data['response_time'],
-                                                   'http_code': data['http_code'],
-                                                   'pattern_matched': data['pattern_matched'],
-                                                   })
-        record = cursor.fetchone()
-        self.db_conn.commit()
-        logger.info('Record {check_id} with check data for {url} inserted to db'.format(check_id=record[0], url=data['url']))
+        # the second attempt for the case when db was diconnected and connection was restored
+        for _ in range(2):
+            try:
+                cursor = self.db_conn.cursor()
+                website_id = self._get_website_id(cursor, data['url'])
+                cursor.execute(WEB_MONITORING_INSERT_SQL, {'website_id': website_id,
+                                                           'available': data['available'],
+                                                           'request_ts': data['request_ts'],
+                                                           'response_time': data['response_time'],
+                                                           'http_code': data['http_code'],
+                                                           'pattern_matched': data['pattern_matched'],
+                                                           })
+                record = cursor.fetchone()
+                self.db_conn.commit()
+                logger.info('Record {check_id} with check data for {url} inserted to db'.format(check_id=record[0], url=data['url']))
+                return
+            except Exception as ex:
+                if self.db_conn.closed:
+                    logger.warning('Db connection was closed. Try to reconnect')
+                    self._connect_db()
+                else:
+                    raise ex

@@ -9,3 +9,6 @@ postgre_sql:
   dbname: web_monitoring
   user: web_monitoring
   password: 12345
+  reconnect_attempts: 5
+  reconnect_delay: 1
+  reconnect_backoff: 2
