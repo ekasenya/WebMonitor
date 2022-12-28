@@ -2,17 +2,26 @@ import sys
 import logging
 import argparse
 import yaml
+import time
+import json
 
 from kafka import KafkaConsumer
 
-from data_handler.data_saver import init_data_saver
+from data_saver import init_data_saver
 
 
 def run_handler(args, config):
     consumer = init_kafka_consumer(config)
     data_saver = init_data_saver(args.data_saver_type)
-    for msg in consumer:
-        print(msg)
+    while True:
+        try:
+            data_saver.init(config)
+            for msg in consumer:
+                data_saver.save_data_item(msg.value)
+        finally:
+            data_saver.finalize()
+
+        time.sleep(5)
 
 
 def get_config(args):
@@ -23,7 +32,9 @@ def get_config(args):
 def init_kafka_consumer(config):
     return KafkaConsumer(config['kafka_consumer']['topic'],
                          group_id=config['kafka_consumer']['group_id'],
-                         bootstrap_servers=config['kafka_consumer']['bootstrap_servers'])
+                         bootstrap_servers=config['kafka_consumer']['bootstrap_servers'],
+                         value_deserializer=lambda m: json.loads(m)
+                         )
 
 
 def parse_args():
@@ -48,7 +59,4 @@ def main():
         run_handler(args, get_config(args))
     except KeyboardInterrupt:
         sys.exit('Data handler stopped.')
-    except Exception as e:
-        msg = 'Data handler stopped unexpectedly. Error: {}'.format(e)
-        logging.info(msg)
-        sys.exit(msg)
+

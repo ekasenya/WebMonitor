@@ -1,6 +1,6 @@
-from data_handler.data_saver_constants import DataSaverTypes
-from data_handler.postgre_sql_data_saver import PostgreSqlDataSaver
-from data_handler.base_data_saver import BaseDataSaver
+from data_saver_constants import DataSaverTypes
+from postgre_sql_data_saver import PostgreSqlDataSaver
+from base_data_saver import BaseDataSaver
 
 
 def init_data_saver(data_saver_type: str) -> BaseDataSaver:
@@ -10,11 +10,13 @@ def init_data_saver(data_saver_type: str) -> BaseDataSaver:
     :type data_saver_type: str
     :rtype: BaseDataSaver
     """
+
+    print('init_data_saver')
     if not DataSaverTypes.has_value(data_saver_type):
         raise TypeError()
 
     data_saver = None
-    if data_saver_type == DataSaverTypes.POSTGRE_SQL:
+    if data_saver_type == DataSaverTypes.POSTGRE_SQL.value:
         data_saver = PostgreSqlDataSaver()
 
     return data_saver
