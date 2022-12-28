@@ -4,11 +4,13 @@ kafka_consumer:
   group_id: web_monitor_group_1
 
 postgre_sql:
-  host: 127.0.0.1
-  port: 5432
-  dbname: web_monitoring
-  user: web_monitoring
-  password: 12345
-  reconnect_attempts: 5
-  reconnect_delay: 1
-  reconnect_backoff: 2
+  connecton:
+    host: 127.0.0.1
+    port: 5432
+    dbname: web_monitoring
+    user: web_monitoring
+    password: 12345
+  reconnect:
+    tries: 5
+    delay: 1
+    backoff: 2

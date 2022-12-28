@@ -1,7 +1,7 @@
 import logging
 
-from data_saver_constants import DataSaverTypes
-from base_data_saver import BaseDataSaver
+from data_handler.data_saver_constants import DataSaverTypes
+from data_handler.base_data_saver import BaseDataSaver
 
 import psycopg2
 from retry import retry
@@ -48,12 +48,9 @@ class PostgreSqlDataSaver(BaseDataSaver):
             self.db_conn.close()
 
     def _connect_db(self):
-        @retry(tries=self.config['reconnect_attempts'], delay=self.config['reconnect_delay'],
-               backoff=self.config['reconnect_backoff'])
+        @retry(**self.config['reconnect'])
         def _connect_db_with_retry():
-            self.db_conn = psycopg2.connect(dbname=self.config['dbname'], user=self.config['user'],
-                                            password=self.config['password'], host=self.config['host'],
-                                            port=self.config['port'])
+            self.db_conn = psycopg2.connect(**self.config['connection'])
             logger.info('Connected to db: {host}:{port}'.format(host=self.config['host'], port=self.config['port']))
 
         _connect_db_with_retry(self)
@@ -72,18 +69,22 @@ class PostgreSqlDataSaver(BaseDataSaver):
         for _ in range(2):
             try:
                 cursor = self.db_conn.cursor()
-                website_id = self._get_website_id(cursor, data['url'])
-                cursor.execute(WEB_MONITORING_INSERT_SQL, {'website_id': website_id,
-                                                           'available': data['available'],
-                                                           'request_ts': data['request_ts'],
-                                                           'response_time': data['response_time'],
-                                                           'http_code': data['http_code'],
-                                                           'pattern_matched': data['pattern_matched'],
-                                                           })
-                record = cursor.fetchone()
-                self.db_conn.commit()
-                logger.info('Record {check_id} with check data for {url} inserted to db'.format(check_id=record[0], url=data['url']))
-                return
+                try:
+                    website_id = self._get_website_id(cursor, data['url'])
+                    cursor.execute(WEB_MONITORING_INSERT_SQL, {'website_id': website_id,
+                                                               'available': data['available'],
+                                                               'request_ts': data['request_ts'],
+                                                               'response_time': data['response_time'],
+                                                               'http_code': data['http_code'],
+                                                               'pattern_matched': data['pattern_matched'],
+                                                               })
+                    record = cursor.fetchone()
+                    self.db_conn.commit()
+                    logger.info('Record {check_id} with check data for {url} inserted to db'.format(check_id=record[0], url=data['url']))
+                    return
+                finally:
+                    if cursor:
+                        cursor.close()
             except Exception as ex:
                 if self.db_conn.closed:
                     logger.warning('Db connection was closed. Try to reconnect')
