@@ -3,7 +3,7 @@ from data_handler.postgre_sql_data_saver import PostgreSqlDataSaver
 from data_handler.base_data_saver import BaseDataSaver
 
 
-def create_data_saver(data_saver_type: str) -> BaseDataSaver:
+def init_data_saver(data_saver_type: str) -> BaseDataSaver:
     """
     Create an object for save data metrics
 

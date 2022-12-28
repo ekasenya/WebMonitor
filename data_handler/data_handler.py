@@ -5,9 +5,12 @@ import yaml
 
 from kafka import KafkaConsumer
 
+from data_handler.data_saver import init_data_saver
+
 
 def run_handler(args, config):
     consumer = init_kafka_consumer(config)
+    data_saver = init_data_saver(args.data_saver_type)
     for msg in consumer:
         print(msg)
 
