@@ -51,7 +51,7 @@ class PostgreSqlDataSaver(BaseDataSaver):
         @retry(**self.config['reconnect'])
         def _connect_db_with_retry():
             self.db_conn = psycopg2.connect(**self.config['connection'])
-            logger.info('Connected to db: {host}:{port}'.format(host=self.config['host'], port=self.config['port']))
+            logger.info('Connected to db: {host}:{port}'.format(host=self.config['connection']['host'], port=self.config['connection']['port']))
 
         _connect_db_with_retry(self)
 
