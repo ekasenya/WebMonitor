@@ -50,7 +50,7 @@ class PostgreSqlDataSaver(BaseDataSaver):
     def _connect_db(self):
         @retry(tries=self.config['reconnect_attempts'], delay=self.config['reconnect_delay'],
                backoff=self.config['reconnect_backoff'])
-        def _connect_db_with_retry(self):
+        def _connect_db_with_retry():
             self.db_conn = psycopg2.connect(dbname=self.config['dbname'], user=self.config['user'],
                                             password=self.config['password'], host=self.config['host'],
                                             port=self.config['port'])
@@ -68,7 +68,7 @@ class PostgreSqlDataSaver(BaseDataSaver):
         return record[0]
 
     def save_data_item(self, data):
-        # the second attempt for the case when db was diconnected and connection was restored
+        # the second attempt for the case when db was disconnected and connection was restored
         for _ in range(2):
             try:
                 cursor = self.db_conn.cursor()
