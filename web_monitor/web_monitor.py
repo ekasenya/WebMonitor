@@ -25,8 +25,8 @@ async def check_website(client, url, pattern):
         start_t = time.monotonic()
         async with client.get(url) as resp:
             if pattern:
-                content = await resp.read()
-                pattern_matched = bool(re.search(pattern, content.decode('utf-8')))
+                content = await resp.text()
+                pattern_matched = bool(re.search(pattern, content))
             else:
                 pattern_matched = None
 
@@ -45,6 +45,7 @@ async def check_websites(args):
         tasks = []
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False), conn_timeout=5) as client:
             for item in urls:
+                # TODO: check url lenght
                 tasks.append(asyncio.create_task(check_website(client, item['url'], item.get('pattern'))))
                 print(item['url'], item.get('pattern'))
 
