@@ -1,10 +1,10 @@
-import sys
-import logging
 import argparse
-import yaml
-import time
 import json
+import logging
+import sys
+import time
 
+import yaml
 from kafka import KafkaConsumer
 
 from data_handler.data_saver import init_data_saver
