@@ -1,3 +1,4 @@
 kafka_producer:
   topic: web_monitor_topic
-  bootstrap_servers: localhost:9092
+  connection:
+    bootstrap_servers: localhost:9092

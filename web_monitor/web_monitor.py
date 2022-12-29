@@ -95,8 +95,7 @@ def get_config(args):
 def init_kafka_producer(config):
     return KafkaProducer(
         value_serializer=lambda m: json.dumps(m).encode('utf-8'),
-        bootstrap_servers=config['kafka_producer']['bootstrap_servers'],
-        api_version=(0, 10, 1)
+        **config['kafka_producer']['connection'],
     )
 
 
