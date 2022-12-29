@@ -112,7 +112,10 @@ def main():
         args = parse_args()
         config_logging(args)
 
-        run(args, get_config(args))
+        config = get_config(args)
+        check_config(config)
+
+        run(args, config)
     except KeyboardInterrupt:
         sys.exit('Web monitor stopped.')
 
