@@ -53,7 +53,7 @@ class PostgreSqlDataSaver(BaseDataSaver):
             self.db_conn = psycopg2.connect(**self.config['connection'])
             logger.info('Connected to db: {host}:{port}'.format(host=self.config['connection']['host'], port=self.config['connection']['port']))
 
-        _connect_db_with_retry(self)
+        _connect_db_with_retry()
 
     def _get_website_id(self, cursor, url):
         cursor.execute(WEBSITE_READ_SQL, {'url': url})
