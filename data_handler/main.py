@@ -13,13 +13,14 @@ from data_handler.data_saver import init_data_saver
 def run_handler(args, config):
     consumer = init_kafka_consumer(config)
     data_saver = init_data_saver(args.data_saver_type, config)
+    sleep_interval = config['kafka_consumer']['sleep_interval']
     try:
         data_saver.init()
         while True:
             for msg in consumer:
                 data_saver.save_data_item(msg.value)
 
-            time.sleep(config['kafka_consumer']['sleep_interval'])
+            time.sleep(sleep_interval)
 
     finally:
         data_saver.finalize()
