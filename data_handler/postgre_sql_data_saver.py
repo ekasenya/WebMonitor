@@ -10,13 +10,13 @@ logger = logging.getLogger('postgre_sql_data_saver')
 
 
 WEBSITE_READ_SQL = '''
-SELECT website_id from information_schema.websites
+SELECT website_id from public.websites
 WHERE url = %(url)s
 '''
 
 
 WEBSITE_INSERT_SQL = '''
-INSERT INTO information_schema.websites
+INSERT INTO public.websites
 (url)
 VALUES(%(url)s)
 RETURNING website_id
@@ -24,7 +24,7 @@ RETURNING website_id
 
 
 WEB_MONITORING_INSERT_SQL = '''
-INSERT INTO information_schema.websites_check_results
+INSERT INTO public.websites_check_results
 (website_id, available, request_ts, response_time, http_code, pattern_matched)
 VALUES(%(website_id)s, %(available)s, %(request_ts)s, %(response_time)s, %(http_code)s, %(pattern_matched)s)
 RETURNING check_id
@@ -33,10 +33,10 @@ RETURNING check_id
 
 class PostgreSqlDataSaver(BaseDataSaver):
     @staticmethod
-    def get_type():
+    def get_type() -> str:
         return DataSaverTypes.POSTGRE_SQL.value
 
-    def __init__(self, config):
+    def __init__(self, config: dict):
         self.db_conn = None
         self.config = config['postgre_sql']
 
@@ -55,7 +55,10 @@ class PostgreSqlDataSaver(BaseDataSaver):
 
         _connect_db_with_retry()
 
-    def _get_website_id(self, cursor, url):
+    def _get_cursor(self):
+        return self.db_conn.cursor()
+
+    def _get_website_id(self, cursor, url: str):
         cursor.execute(WEBSITE_READ_SQL, {'url': url})
         record = cursor.fetchone()
         if not record:
@@ -64,11 +67,11 @@ class PostgreSqlDataSaver(BaseDataSaver):
 
         return record[0]
 
-    def save_data_item(self, data):
+    def save_data_item(self, data: dict):
         # the second attempt for the case when db was disconnected and connection was restored
         for _ in range(2):
             try:
-                cursor = self.db_conn.cursor()
+                cursor = self._get_cursor()
                 try:
                     website_id = self._get_website_id(cursor, data['url'])
                     cursor.execute(WEB_MONITORING_INSERT_SQL, {'website_id': website_id,
@@ -91,3 +94,5 @@ class PostgreSqlDataSaver(BaseDataSaver):
                     self._connect_db()
                 else:
                     raise ex
+
+
