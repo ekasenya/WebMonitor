@@ -1,11 +1,11 @@
 import logging
 
-from data_handler.data_saver_constants import DataSaverTypes
-from data_handler.base_data_saver import BaseDataSaver
-
 import psycopg2
 import psycopg2.errors as pg_errors
 from retry import retry
+
+from data_handler.base_data_saver import BaseDataSaver
+from data_handler.data_saver_constants import DataSaverTypes
 
 logger = logging.getLogger('postgre_sql_data_saver')
 

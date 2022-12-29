@@ -1,7 +1,7 @@
 import pytest
 
-from data_handler.data_saver_constants import DataSaverTypes
 from data_handler.data_saver import init_data_saver
+from data_handler.data_saver_constants import DataSaverTypes
 
 
 def test_init_data_saver():

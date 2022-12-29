@@ -2,10 +2,9 @@
 
 import logging
 
+from data_handler.base_data_saver import BaseDataSaver
 from data_handler.data_saver_constants import DataSaverTypes
 from data_handler.postgre_sql_data_saver import PostgreSqlDataSaver
-from data_handler.base_data_saver import BaseDataSaver
-
 
 logger = logging.getLogger('data_saver')
 

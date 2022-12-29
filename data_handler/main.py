@@ -6,7 +6,6 @@ import time
 
 import yaml
 from kafka import KafkaConsumer
-
 from retry import retry
 
 from data_handler.data_saver import init_data_saver
