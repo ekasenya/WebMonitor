@@ -39,7 +39,6 @@ async def check_websites(config: dict):
                                      conn_timeout=config['web_monitoring']['conn_timeout']) as client:
         for item in get_files(config['web_monitoring']['source_filename']):
             tasks.append(asyncio.create_task(check_website(client, item['url'], item.get('pattern'))))
-            print(item['url'], item.get('pattern'))
 
         return await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -105,6 +104,8 @@ def init_kafka_producer(config: dict) -> KafkaProducer:
 def check_config(config):
     if config['web_monitoring']['check_frequency'] < 5 or config['web_monitoring']['check_frequency'] > 300:
         raise ValueError('Check frequency must be between 5 and 300')
+
+    return True
 
 
 def main():
