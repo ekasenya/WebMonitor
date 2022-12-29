@@ -80,9 +80,6 @@ def send_data(kafka_producer: KafkaProducer, topic_name: str, check_results: Lis
 def parse_args():
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('-c', '--config', required=True, help='configuration file name')
-    parser.add_argument('--source_filename', type=str, help='the name of a file with url list')
-    parser.add_argument('--frequency', type=int, choices=range(5, 300), help='check frequency (sec)')
-    parser.add_argument('--timeout', default=5, type=int, help='web site connection timeout (sec)')
     return parser.parse_args()
 
 
@@ -103,6 +100,11 @@ def init_kafka_producer(config: dict) -> KafkaProducer:
         value_serializer=lambda m: json.dumps(m).encode('utf-8'),
         **config['kafka_producer']['connection'],
     )
+
+
+def check_config(config):
+    if config['web_monitoring']['check_frequency'] < 5 or config['web_monitoring']['check_frequency'] > 300:
+        raise ValueError('Check frequency must be between 5 and 300')
 
 
 def main():
