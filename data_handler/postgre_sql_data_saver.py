@@ -4,6 +4,7 @@ from data_handler.data_saver_constants import DataSaverTypes
 from data_handler.base_data_saver import BaseDataSaver
 
 import psycopg2
+import psycopg2.errors as pg_errors
 from retry import retry
 
 logger = logging.getLogger('postgre_sql_data_saver')
@@ -15,8 +16,8 @@ WHERE url = %(url)s
 '''
 
 WEBSITE_READ_BY_ID_SQL = '''
-SELECT website_id from public.websites
-WHERE url = %(website_id)s
+SELECT url from public.websites
+WHERE website_id = %(website_id)s
 '''
 
 
@@ -33,6 +34,12 @@ INSERT INTO public.websites_check_results
 (website_id, available, request_ts, response_time, http_code, pattern_matched)
 VALUES(%(website_id)s, %(available)s, %(request_ts)s, %(response_time)s, %(http_code)s, %(pattern_matched)s)
 RETURNING check_id
+'''
+
+
+WEB_MONITORING_READ_BY_CHECK_ID_SQL = '''
+SELECT * from public.websites_check_results
+WHERE check_id = %(check_id)s
 '''
 
 
@@ -88,12 +95,13 @@ class PostgreSqlDataSaver(BaseDataSaver):
                                                                })
                     record = cursor.fetchone()
                     self.db_conn.commit()
-                    logger.info('Record {check_id} with check data for {url} inserted to db'.format(check_id=record[0], url=data['url']))
-                    return
+                    logger.info('Record {check_id} with check data for {url} inserted to db'.format(check_id=record[0],
+                                                                                                    url=data['url']))
+                    return record[0]
                 finally:
                     if cursor:
                         cursor.close()
-            except psycopg2.errors.DatatypeMismatch as ex:
+            except (pg_errors.DatatypeMismatch, pg_errors.InvalidTextRepresentation) as ex:
                 logger.error('Incorrect record data. {}'.format(str(ex)))
             except Exception as ex:
                 if self.db_conn.closed:
