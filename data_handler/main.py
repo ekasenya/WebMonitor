@@ -7,10 +7,12 @@ import time
 import yaml
 from kafka import KafkaConsumer
 
+from retry import retry
+
 from data_handler.data_saver import init_data_saver
 
 
-def run_handler(args, config):
+def run_handler(args, config: dict):
     consumer = init_kafka_consumer(config)
     data_saver = init_data_saver(args.data_saver_type, config)
     sleep_interval = config['kafka_consumer']['sleep_interval']
@@ -31,7 +33,8 @@ def get_config(args):
         return yaml.full_load(config_f)
 
 
-def init_kafka_consumer(config):
+@retry(tries=5, delay=1, backoff=2)
+def init_kafka_consumer(config: dict) -> KafkaConsumer:
     return KafkaConsumer(config['kafka_consumer']['topic'],
                          value_deserializer=lambda m: json.loads(m),
                          **config['kafka_consumer']['connection']

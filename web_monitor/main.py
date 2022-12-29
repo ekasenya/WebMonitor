@@ -15,11 +15,15 @@ from kafka import KafkaProducer
 from collections import namedtuple
 from time import sleep
 
+from retry import retry
+
 
 CheckInfo = namedtuple('CheckInfo', ['url', 'available', 'request_ts', 'response_time', 'http_code', 'pattern_matched'])
 
+logger = logging.getLogger('web_monitor')
 
-async def check_website(client, url, pattern):
+
+async def check_website(client: aiohttp.ClientSession, url: str, pattern: str) -> CheckInfo:
     request_ts = int(time.time())
     try:
         start_t = time.monotonic()
@@ -33,7 +37,7 @@ async def check_website(client, url, pattern):
             return CheckInfo(url=url, available=True, request_ts=request_ts, response_time=time.monotonic() - start_t,
                              http_code=resp.status, pattern_matched=pattern_matched)
     except Exception as ex:
-        logging.info('Error {}: {}'.format(type(ex), str(ex)))
+        logger.info('Error {}: {}'.format(type(ex), str(ex)))
         return CheckInfo(url=url, available=False, request_ts=request_ts, response_time=None,
                          http_code=None, pattern_matched=None)
 
@@ -52,17 +56,17 @@ async def check_websites(args):
             return await asyncio.gather(*tasks, return_exceptions=True)
 
 
-def run(args, config):
+def run(args, config: dict):
     kafka_producer = init_kafka_producer(config)
     topic_name = config['kafka_producer']['topic']
 
     while True:
-        logging.info('Start check websites')
+        logger.info('Start check websites')
 
         check_results = asyncio.run(check_websites(args))
         send_data(kafka_producer, topic_name, check_results)
 
-        logging.info('Sleep for {} seconds...'.format(args.frequency))
+        logger.info('Sleep for {} seconds...'.format(args.frequency))
         sleep(args.frequency)
 
 
@@ -87,12 +91,13 @@ def config_logging(args):
     logging.info("Web monitor started with options: {}".format(args))
 
 
-def get_config(args):
+def get_config(args) -> dict:
     with open(args.config) as config_f:
         return yaml.full_load(config_f)
 
 
-def init_kafka_producer(config):
+@retry(tries=5, delay=1, backoff=2)
+def init_kafka_producer(config: dict) -> KafkaProducer:
     return KafkaProducer(
         value_serializer=lambda m: json.dumps(m).encode('utf-8'),
         **config['kafka_producer']['connection'],
@@ -107,3 +112,7 @@ def main():
         run(args, get_config(args))
     except KeyboardInterrupt:
         sys.exit('Web monitor stopped.')
+
+
+if __name__ == "__main__":
+    main()
