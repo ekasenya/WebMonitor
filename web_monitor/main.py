@@ -1,26 +1,47 @@
 import argparse
-import logging
-import sys
-import json
-import yaml
 import asyncio
-import aiohttp
-import time
-
+import json
+import logging
 import re
-
-from typing import List
-
-from kafka import KafkaProducer
+import sys
+import time
 from collections import namedtuple
 from time import sleep
+from typing import List
 
+import aiohttp
+import yaml
+from kafka import KafkaProducer
 from retry import retry
-
 
 CheckInfo = namedtuple('CheckInfo', ['url', 'available', 'request_ts', 'response_time', 'http_code', 'pattern_matched'])
 
 logger = logging.getLogger('web_monitor')
+
+
+def run(args, config: dict):
+    kafka_producer = init_kafka_producer(config)
+    topic_name = config['kafka_producer']['topic']
+    check_frequency = config['web_monitoring']['check_frequency']
+    while True:
+        logger.info('Start check websites')
+
+        check_results = asyncio.run(check_websites(config))
+        send_data(kafka_producer, topic_name, check_results)
+
+        logger.info('Sleep for {} seconds...'.format(args.frequency))
+        sleep(check_frequency)
+
+
+async def check_websites(config: dict):
+    tasks = []
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False),
+                                     conn_timeout=config['web_monitoring']['conn_timeout']) as client:
+        for item in get_files(config['web_monitoring']['source_filename']):
+            tasks.append(asyncio.create_task(check_website(client, item['url'], item.get('pattern'))))
+            print(item['url'], item.get('pattern'))
+
+        return await asyncio.gather(*tasks, return_exceptions=True)
 
 
 async def check_website(client: aiohttp.ClientSession, url: str, pattern: str) -> CheckInfo:
@@ -42,32 +63,12 @@ async def check_website(client: aiohttp.ClientSession, url: str, pattern: str) -
                          http_code=None, pattern_matched=None)
 
 
-async def check_websites(args):
-    with open(args.source_filename, mode="r") as f:
+def get_files(source_filename: str) -> dict:
+    with open(source_filename, mode="r") as f:
         urls = json.load(f)
 
-        tasks = []
-        async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False), conn_timeout=5) as client:
-            for item in urls:
-                # TODO: check url lenght
-                tasks.append(asyncio.create_task(check_website(client, item['url'], item.get('pattern'))))
-                print(item['url'], item.get('pattern'))
-
-            return await asyncio.gather(*tasks, return_exceptions=True)
-
-
-def run(args, config: dict):
-    kafka_producer = init_kafka_producer(config)
-    topic_name = config['kafka_producer']['topic']
-
-    while True:
-        logger.info('Start check websites')
-
-        check_results = asyncio.run(check_websites(args))
-        send_data(kafka_producer, topic_name, check_results)
-
-        logger.info('Sleep for {} seconds...'.format(args.frequency))
-        sleep(args.frequency)
+        for item in urls:
+            yield item
 
 
 def send_data(kafka_producer: KafkaProducer, topic_name: str, check_results: List[CheckInfo]):
