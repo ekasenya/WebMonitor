@@ -102,7 +102,7 @@ class PostgreSqlDataSaver(BaseDataSaver):
                     if cursor:
                         cursor.close()
             except (pg_errors.DatatypeMismatch, pg_errors.InvalidTextRepresentation) as ex:
-                logger.error('Incorrect record data. {}'.format(str(ex)))
+                logger.error('Incorrect record data. Skipping. {}'.format(str(ex)))
             except Exception as ex:
                 if self.db_conn.closed:
                     logger.warning('Db connection was closed. Try to reconnect')
