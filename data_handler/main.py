@@ -12,18 +12,21 @@ from retry import retry
 from data_handler.data_saver import init_data_saver
 
 
+def _run_endless_loop(consumer, data_saver, config):
+    sleep_interval = config['kafka_consumer']['sleep_interval']
+    while True:
+        for msg in consumer:
+            data_saver.save_data_item(msg.value)
+
+        time.sleep(sleep_interval)
+
+
 def run_handler(args, config: dict):
     consumer = init_kafka_consumer(config)
     data_saver = init_data_saver(args.data_saver_type, config)
-    sleep_interval = config['kafka_consumer']['sleep_interval']
     try:
         data_saver.init()
-        while True:
-            for msg in consumer:
-                data_saver.save_data_item(msg.value)
-
-            time.sleep(sleep_interval)
-
+        _run_endless_loop(consumer, data_saver, config)
     finally:
         data_saver.finalize()
 
