@@ -14,6 +14,11 @@ SELECT website_id from public.websites
 WHERE url = %(url)s
 '''
 
+WEBSITE_READ_BY_ID_SQL = '''
+SELECT website_id from public.websites
+WHERE url = %(website_id)s
+'''
+
 
 WEBSITE_INSERT_SQL = '''
 INSERT INTO public.websites
@@ -88,6 +93,8 @@ class PostgreSqlDataSaver(BaseDataSaver):
                 finally:
                     if cursor:
                         cursor.close()
+            except psycopg2.errors.DatatypeMismatch as ex:
+                logger.error('Incorrect record data. {}'.format(str(ex)))
             except Exception as ex:
                 if self.db_conn.closed:
                     logger.warning('Db connection was closed. Try to reconnect')
