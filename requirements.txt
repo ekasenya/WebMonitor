@@ -1,0 +1,7 @@
+kafka-python
+pytest
+mock
+psycopg2-binary
+aiohttp
+PyYAML
+retry

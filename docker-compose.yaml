@@ -1,0 +1,75 @@
+  version: '3'
+
+  services:
+    zookeeper:
+      image: bitnami/zookeeper:latest
+      networks:
+        - web_monitor_network
+      container_name: zookeeper
+      environment:
+        ZOO_ENABLE_AUTH: 'yes'
+        ZOOKEEPER_CLIENT_PORT: 2181
+        ZOOKEEPER_TICK_TIME: 2000
+
+    broker:
+      image: bitnami/kafka:latest
+      container_name: broker
+      ports:
+        - "8002:9092"
+      networks:
+        - web_monitor_network
+      depends_on:
+        - zookeeper
+      environment:
+        KAFKA_BROKER_ID: 1
+        KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+        KAFKA_CFG_LISTENERS: PLAINTEXT://broker:9092
+        KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
+        ALLOW_PLAINTEXT_LISTENER: 'yes'
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+        KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+    web_monitoring:
+      container_name: web_monitor
+      depends_on:
+        - broker
+      networks:
+        - web_monitor_network
+      restart: always
+      build: .
+      command: /code/web_monitoring/run_web_monitor.sh
+      volumes:
+        - .:/web_monitoring/web_monitor
+        - .:/web_monitoring/web_monitor/logs
+
+    data-handler:
+      container_name: data_handler
+      depends_on:
+        - broker
+      networks:
+        - web_monitor_network
+      restart: always
+      build: .
+      command: /code/web_monitoring/run_data_handler.sh
+      volumes:
+        - .:/web_monitoring/data_handler
+        - .:/web_monitoring/data_handler/logs
+
+    test-db:
+      image: postgres
+      ports:
+        - "8001:5432"
+      networks:
+        - web_monitor_network
+      environment:
+        - POSTGRES_DB=web_monitoring
+        - POSTGRES_USER=web_monitoring
+        - POSTGRES_PASSWORD=12345
+      volumes:
+        - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql
+
+  networks:
+    web_monitor_network:
+      driver: bridge
