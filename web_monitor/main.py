@@ -58,7 +58,7 @@ async def check_website(client: aiohttp.ClientSession, url: str, pattern: str) -
             return CheckInfo(url=url, available=True, request_ts=request_ts, response_time=time.monotonic() - start_t,
                              http_code=resp.status, pattern_matched=pattern_matched)
     except Exception as ex:
-        logger.info('Error {}: {}'.format(type(ex), str(ex)))
+        logger.info('Url: {}. Error while checking {}: {}'.format(url, type(ex), str(ex)))
         return CheckInfo(url=url, available=False, request_ts=request_ts, response_time=None,
                          http_code=None, pattern_matched=None)
 
