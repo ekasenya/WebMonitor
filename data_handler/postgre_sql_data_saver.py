@@ -109,5 +109,3 @@ class PostgreSqlDataSaver(BaseDataSaver):
                     self._connect_db()
                 else:
                     raise ex
-
-
