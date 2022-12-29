@@ -19,7 +19,7 @@ def run_handler(args, config):
             for msg in consumer:
                 data_saver.save_data_item(msg.value)
 
-            time.sleep(5)
+            time.sleep(config['kafka_consumer']['sleep_interval'])
 
     finally:
         data_saver.finalize()
