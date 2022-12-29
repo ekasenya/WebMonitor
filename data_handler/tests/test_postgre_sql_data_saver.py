@@ -1,11 +1,9 @@
-import pytest
 import mock
-
 import psycopg2.errors as pg_errors
+import pytest
 
 from data_handler.postgre_sql_data_saver import PostgreSqlDataSaver, WEBSITE_READ_BY_ID_SQL, \
     WEB_MONITORING_READ_BY_CHECK_ID_SQL
-from data_handler.tests.conftest import postgre_sql_data_saver
 
 
 TEST_URL = 'https://www.google.com'
