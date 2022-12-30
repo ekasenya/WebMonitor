@@ -44,6 +44,7 @@ WHERE check_id = %(check_id)s
 
 
 class PostgreSqlDataSaver(BaseDataSaver):
+    """Save data to PostgreSQL"""
     @staticmethod
     def get_type() -> str:
         return DataSaverTypes.POSTGRE_SQL.value
