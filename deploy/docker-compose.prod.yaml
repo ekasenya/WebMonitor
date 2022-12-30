@@ -8,10 +8,12 @@
       container_name: zookeeper
       environment:
         ZOO_ENABLE_AUTH: 'yes'
+        ZOO_SERVER_USERS:
+        ZOO_SERVER_PASSWORDS:
         ZOOKEEPER_CLIENT_PORT: 2181
         ZOOKEEPER_TICK_TIME: 2000
 
-    # should be replaced with aiven kafka :)
+    # should be replaced with aiven kafka
     broker:
       image: bitnami/kafka:latest
       container_name: broker
@@ -24,10 +26,14 @@
       environment:
         KAFKA_BROKER_ID: 1
         KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-        KAFKA_CFG_LISTENERS: PLAINTEXT://broker:9092
-        KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
-        ALLOW_PLAINTEXT_LISTENER: 'yes'
-        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+        KAFKA_CFG_LISTENERS: SASL_SSL://broker:9092
+        KAFKA_CFG_ADVERTISED_LISTENERS: SASL_SSL://broker:9092
+        ALLOW_PLAINTEXT_LISTENER: 'no'
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+        KAFKA_ZOOKEEPER_USER:
+        KAFKA_ZOOKEEPER_PASSWORD:
+        KAFKA_CLIENT_USERS:
+        KAFKA_CLIENT_PASSWORDS:
         KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
         KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
         KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -40,7 +46,7 @@
         - web_monitor_network
       restart: always
       build: .
-      command: /code/web_monitoring/run_web_monitor_dev.sh
+      command: /code/web_monitoring/deploy/run_web_monitor_prod.sh
       volumes:
         - .:/web_monitoring/web_monitor
         - .:/web_monitoring/web_monitor/logs
@@ -53,7 +59,7 @@
         - web_monitor_network
       restart: always
       build: .
-      command: /code/web_monitoring/run_data_handler_dev.sh
+      command: /code/web_monitoring/deploy/run_data_handler_prod.sh
       volumes:
         - .:/web_monitoring/data_handler
         - .:/web_monitoring/data_handler/logs

@@ -40,7 +40,7 @@
         - web_monitor_network
       restart: always
       build: .
-      command: /code/web_monitoring/run_web_monitor_dev.sh
+      command: /code/web_monitoring/deploy/run_web_monitor_dev.sh
       volumes:
         - .:/web_monitoring/web_monitor
         - .:/web_monitoring/web_monitor/logs
@@ -53,7 +53,7 @@
         - web_monitor_network
       restart: always
       build: .
-      command: /code/web_monitoring/run_data_handler_dev.sh
+      command: /code/web_monitoring/deploy/run_data_handler_dev.sh
       volumes:
         - .:/web_monitoring/data_handler
         - .:/web_monitoring/data_handler/logs

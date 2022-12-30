@@ -5,7 +5,7 @@ arg=$1
 run_dev () {
   echo "Start running \"dev\" environment..."
   docker-compose down -v
-  cp docker-compose.dev.yaml docker-compose.yaml
+  cp ./deploy/docker-compose.dev.yaml docker-compose.yaml
   build
   docker-compose up
 }
@@ -13,7 +13,7 @@ run_dev () {
 run_prod () {
   echo "Start running \"prod\" environment..."
   docker-compose down -v
-  cp docker-compose.prod.yaml docker-compose.yaml
+  cp ./deploy/docker-compose.prod.yaml docker-compose.yaml
   build
 
   docker-compose up

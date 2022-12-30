@@ -3,6 +3,7 @@ web_monitoring:
   source_filename: web_monitor/data/url_list.json
   conn_timeout: 5
 
+# should be replaced with aiven kafka
 kafka_producer:
   topic: web_monitor_topic
   connection:

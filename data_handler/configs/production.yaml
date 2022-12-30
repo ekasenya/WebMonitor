@@ -1,3 +1,4 @@
+# should be replaced with aiven kafka
 kafka_consumer:
   topic: web_monitor_topic
   sleep_interval: 5
