@@ -1,4 +1,9 @@
+web_monitoring:
+  check_frequency: 30
+  source_filename: web_monitor/data/url_list.json
+  conn_timeout: 5
+
 kafka_producer:
   topic: web_monitor_topic
   connection:
-    bootstrap_servers: localhost:9092
+    bootstrap_servers: broker:9092

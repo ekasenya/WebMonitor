@@ -2,17 +2,17 @@ kafka_consumer:
   topic: web_monitor_topic
   sleep_interval: 5
   connection:
-    bootstrap_servers: localhost:9092
+    bootstrap_servers: broker:9092
     group_id: web_monitor_group_1
     consumer_timeout_ms: 10000
 
 postgre_sql:
   connection:
-    host: 127.0.0.1
-    port: 5432
-    dbname: web_monitoring
-    user: web_monitoring
-    password: 12345
+    host: pg-web-monitoring-esenenkova-c5b9.aivencloud.com
+    port: 20891
+    dbname: web-monitoring-testing
+    user: avnadmin
+    password:
   reconnect:
     tries: 5
     delay: 1

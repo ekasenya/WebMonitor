@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 pytest data_handler/tests
 if [[ $? -eq 0 ]]
