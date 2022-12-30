@@ -1,0 +1,7 @@
+Apache Kafka
+
+1. Kafka Python Client: https://kafka-python.readthedocs.io/en/master/index.html
+2. Docker kafka https://github.com/bitnami/bitnami-docker-kafka/blob/master/README.md
+
+PostgreSQL
+1. Aiven PostgreSQL python code example https://docs.aiven.io/docs/products/postgresql/howto/connect-python
