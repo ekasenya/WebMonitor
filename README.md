@@ -30,7 +30,7 @@ sh run.sh prod
 
 Be default it runs in development mode.
 
-To stop services use
+To stop services press Ctrl+C or use
 ```
 sh stop.sh
 ```
